@@ -1,5 +1,6 @@
 import os
 import re
+import time
 from bs4 import BeautifulSoup
 
 class TreehouseDownloader:
@@ -70,9 +71,20 @@ class TreehouseDownloader:
 
     def get_video_url(self):
         """
-        Extract video url from a single tutorial page
+        Extract the HD video url from a single tutorial page
         """
-        pass
+        url = self.base_url + url
+
+        res = self.browser.open(url)
+        html = res.read()
+
+        soup = BeautifulSoup(html, "html.parser")
+        a = soup.find('a', href=re.compile('.\?hd=yes'))
+
+        if hasattr(a, 'href'):
+            return a['href']
+
+        return None
 
     def download_videos(self):
         """
@@ -126,6 +138,9 @@ class TreehouseDownloader:
                     file_handle.write(data)
 
                 count += 1
+
+                print "Catching my breath :)"
+                time.sleep(5)
 
     def login(self):
         """
