@@ -49,6 +49,47 @@ class TreehouseDownloader:
 
         print 'Log in was successful'
 
+        # Create base folder
+        if not os.path.exists(self.downloads_folder):
+            os.makedirs(self.downloads_folder)
+
+        # Course step urls grouped by stage
+        step_urls = self.get_step_urls()
+
+        for stage in step_urls:
+            print 'Current stage: ' + stage
+
+            urls = step_urls[stage]
+            stage_folder = os.path.join(self.downloads_folder, stage)
+
+            # Create sub-directory for a stage
+            if not os.path.exists(stage_folder):
+                os.makedirs(stage_folder)
+
+            # Video count, will be used in naming videos
+            count = 1
+
+            for url in urls:
+                # Get the url for the HD content for this course step
+                video_url = self.get_video_url(url)
+
+                if not video_url:
+                    continue
+
+                video_url = self.base_url + video_url
+
+                # Download the mp4 file as a binary stream and write it out
+                print "Downloading and saving video " + str(count)
+
+                res = self.browser.open(video_url)
+                data = res.read()
+                file_path = path + "video_{}.mp4".format(str(count))
+
+                with open(file_path, 'wb') as file_handle:
+                    file_handle.write(data)
+
+                count += 1
+
     def login(self):
         """
         Log in the bot to treehouse
