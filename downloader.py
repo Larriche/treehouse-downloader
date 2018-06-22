@@ -69,7 +69,7 @@ class TreehouseDownloader:
 
         return video_page_urls
 
-    def get_video_url(self):
+    def get_video_url(self, url):
         """
         Extract the HD video url from a single tutorial page
         """
@@ -110,6 +110,7 @@ class TreehouseDownloader:
 
             urls = step_urls[stage]
             stage_folder = os.path.join(self.downloads_folder, stage)
+            path = self.downloads_folder + '/' + stage + '/'
 
             # Create sub-directory for a stage
             if not os.path.exists(stage_folder):
