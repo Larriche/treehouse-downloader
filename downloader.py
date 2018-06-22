@@ -29,7 +29,44 @@ class TreehouseDownloader:
         """
         Get the urls of the steps that have downloadable videos
         """
-        pass
+        # Visit the page to get course steps
+        res = self.browser.open(self.landing_page_url + "/stages")
+        html = res.read()
+
+        # Holds url of steps that involve a video tutorial
+        # URLs are grouped by course stages
+        video_page_urls = {}
+
+        soup = BeautifulSoup(html, "html.parser")
+
+        # Divs housing each stage content
+        stage_divs = soup.findAll('div', {'class': 'featurette'})
+
+        for div in stage_divs:
+            stage_title = str(div.find('h2').getText()).strip()
+
+            # Links and headings for tutorials in a stage are stored as lists
+            for li in div.findAll('li'):
+                p = li.find('p')
+                a = li.find('a')
+                if not p or not a:
+                    continue
+
+                # Extract text from the paragraph that may be a duration for
+                # video content or otherwise for objectives and question pages
+                time_text = str(p.getText()).strip()
+
+                if not hasattr(a, 'href'):
+                    continue
+
+                url = a['href']
+
+                # We are adding only URLs whose corresponding info look like durations
+                if re.match(r'^(\d+)\:(\d+)$', time_text):
+                    video_page_urls.setdefault(stage_title, [])
+                    video_page_urls[stage_title].append(url)
+
+        return video_page_urls
 
     def get_video_url(self):
         """
