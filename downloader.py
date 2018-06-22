@@ -22,6 +22,9 @@ class TreehouseDownloader:
         # Main directory for downloads
         self.downloads_folder = folder
 
+        # Base treehouse url
+        self.base_url = 'https://teamtreehouse.com'
+
     def get_step_urls(self):
         """
         Get the urls of the steps that have downloadable videos
@@ -38,10 +41,34 @@ class TreehouseDownloader:
         """
         Main method to be called to handle video downloads
         """
-        pass
+        login = self.login()
+
+        if not login:
+            print 'Log in failed'
+            return
+
+        print 'Log in was successful'
 
     def login(self):
         """
         Log in the bot to treehouse
         """
-        pass
+        # URL for logging in
+        url = self.base_url + '/signin?return_to=%2F'
+
+        # Get login form, fill it and submit it
+        res = self.browser.open(url)
+        self.browser.select_form(nr=0)
+        self.browser.form['user_session[email]'] = self.email
+        self.browser.form['user_session[password]'] = self.password
+
+        self.browser.submit()
+
+        # Check for successful login
+        res = self.browser.open(self.landing_page_url)
+        html = res.read()
+
+        if "/logout" in html:
+            return True
+
+        return False
