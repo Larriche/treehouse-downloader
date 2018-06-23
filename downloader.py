@@ -5,7 +5,7 @@ import sqlite3
 from bs4 import BeautifulSoup
 
 class TreehouseDownloader:
-    def __init__(self, browser, landing_page_url, folder, email, password):
+    def __init__(self, browser, landing_page_url, folder, email, password, skip_downloaded=True):
         """
         Create a new instance of this class
         """
@@ -29,6 +29,9 @@ class TreehouseDownloader:
 
         # Sqlite database connection handle
         self.conn = None
+
+        # Whether to skip already downloaded videos or not
+        self.skip_downloaded = skip_downloaded
 
     def get_step_urls(self):
         """
@@ -137,6 +140,9 @@ class TreehouseDownloader:
                     continue
 
                 video_url = self.base_url + video_url
+
+                if self.skip_downloaded and self.video_downloaded(video_url):
+                    continue
 
                 # Download the mp4 file as a binary stream and write it out
                 print "Downloading and saving video " + str(count)
