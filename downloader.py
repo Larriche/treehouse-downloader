@@ -208,7 +208,7 @@ class TreehouseDownloader:
         """
         Keep track of url of an already downloaded video
         """
-        sql = """INSERT INTO urls(url) VALUES(?)"""
+        sql = "INSERT INTO urls(url) VALUES(?)"
         values = (url,)
 
         with self.conn:
@@ -217,5 +217,20 @@ class TreehouseDownloader:
 
         return
 
+    def video_downloaded(self, url):
+        """
+        Check whether video url exists in the saved video urls
+        """
+        sql = "SELECT * FROM urls WHERE url = ?"
+        values = (url,)
 
+        with self.conn:
+            cur = self.conn.cursor()
+            cur.execute(sql, values)
 
+            rows = cur.fetchall()
+
+            if len(rows):
+                return True
+
+        return False
