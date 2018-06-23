@@ -24,8 +24,13 @@ else:
       browser.addheaders = [('User-agent', user_agent)]
       browser.set_handle_robots(False)
 
-      url, folder, email, password = inputs[1:]
+      url, folder, email, password = inputs[1:5]
 
-      downloader = TreehouseDownloader(browser, url, folder, email, password)
+      if (len(inputs) == 6) and (inputs[5] == 'true' or inputs[5] == 'false'):
+            skip = inputs[5]
+      else:
+            skip = True
+
+      downloader = TreehouseDownloader(browser, url, folder, email, password, skip_downloaded=skip)
       downloader.download_videos()
 

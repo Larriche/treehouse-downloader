@@ -118,20 +118,19 @@ class TreehouseDownloader:
         # Course step urls grouped by stage
         step_urls = self.get_step_urls()
 
+        stage_count = 1
         for stage in step_urls:
             print 'Current stage: ' + stage
 
             urls = step_urls[stage]
-            stage_folder = os.path.join(self.downloads_folder, stage)
-            path = self.downloads_folder + '/' + stage + '/'
+            stage_folder = os.path.join(self.downloads_folder, stage + " " + str(stage_count))
+            path = stage_folder + '/'
 
             # Create sub-directory for a stage
             if not os.path.exists(stage_folder):
                 os.makedirs(stage_folder)
 
-            # Video count, will be used in naming videos
-            count = 1
-
+            url_count = 1
             for url in urls:
                 # Get the url for the HD content for this course step
                 video_url = self.get_video_url(url)
@@ -142,24 +141,27 @@ class TreehouseDownloader:
                 video_url = self.base_url + video_url
 
                 if self.skip_downloaded and self.video_downloaded(video_url):
+                    print "Skipping video " + str(url_count)
+                    url_count += 1
                     continue
 
                 # Download the mp4 file as a binary stream and write it out
-                print "Downloading and saving video " + str(count)
+                print "Downloading and saving video " + str(url_count)
 
                 res = self.browser.open(video_url)
                 data = res.read()
-                file_path = path + "video_{}.mp4".format(str(count))
+                file_path = path + "video_{}.mp4".format(str(url_count))
 
                 with open(file_path, 'wb') as file_handle:
                     file_handle.write(data)
 
                 self.save_url(video_url)
-
-                count += 1
+                url_count += 1
 
                 print "Catching my breath :)"
                 time.sleep(5)
+
+            stage_count += 1
 
     def login(self):
         """
