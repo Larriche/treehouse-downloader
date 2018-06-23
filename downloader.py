@@ -100,8 +100,6 @@ class TreehouseDownloader:
             print "Unable to create connection to cache database. Aborting.."
             return
 
-        return
-
         login = self.login()
 
         if not login:
@@ -149,6 +147,8 @@ class TreehouseDownloader:
 
                 with open(file_path, 'wb') as file_handle:
                     file_handle.write(data)
+
+                self.save_url(video_url)
 
                 count += 1
 
@@ -203,6 +203,19 @@ class TreehouseDownloader:
         self.conn = conn
 
         return True
+
+    def save_url(self, url):
+        """
+        Keep track of url of an already downloaded video
+        """
+        sql = """INSERT INTO urls(url) VALUES(?)"""
+        values = (url,)
+
+        with self.conn:
+            cur = self.conn.cursor()
+            cur.execute(sql, values)
+
+        return
 
 
 
