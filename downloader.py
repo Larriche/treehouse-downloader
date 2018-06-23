@@ -1,6 +1,7 @@
 import os
 import re
 import time
+import sqlite3
 from bs4 import BeautifulSoup
 
 class TreehouseDownloader:
@@ -25,6 +26,9 @@ class TreehouseDownloader:
 
         # Base treehouse url
         self.base_url = 'https://teamtreehouse.com'
+
+        # Sqlite database connection handle
+        self.conn = None
 
     def get_step_urls(self):
         """
@@ -90,10 +94,18 @@ class TreehouseDownloader:
         """
         Main method to be called to handle video downloads
         """
+        setup = self.setup()
+
+        if not setup:
+            print "Unable to create connection to cache database. Aborting.."
+            return
+
+        return
+
         login = self.login()
 
         if not login:
-            print 'Log in failed'
+            print 'Log in failed. Aborting..'
             return
 
         print 'Log in was successful'
@@ -166,3 +178,31 @@ class TreehouseDownloader:
             return True
 
         return False
+
+    def setup(self):
+        """
+        Check whether urls database exists, if not create it
+        """
+        # Create the database for storing the video urls
+        conn = sqlite3.connect('urls.db')
+
+        table_sql = """
+                    CREATE TABLE IF NOT EXISTS urls(
+                        url TEXT
+                    );
+                    """
+        if conn is not None:
+            try:
+                c = conn.cursor()
+                c.execute(table_sql)
+            except Exception as e:
+                return False
+        else:
+            return False
+
+        self.conn = conn
+
+        return True
+
+
+
