@@ -2,6 +2,7 @@ import os
 import re
 import time
 import sqlite3
+import mechanize
 from bs4 import BeautifulSoup
 
 class TreehouseDownloader:
@@ -170,20 +171,27 @@ class TreehouseDownloader:
         # URL for logging in
         url = self.base_url + '/signin?return_to=%2F'
 
-        # Get login form, fill it and submit it
-        res = self.browser.open(url)
-        self.browser.select_form(nr=0)
-        self.browser.form['user_session[email]'] = self.email
-        self.browser.form['user_session[password]'] = self.password
+        html = ""
 
-        self.browser.submit()
+        try:
+            # Get login form, fill it and submit it
+            res = self.browser.open(url)
+            self.browser.select_form(nr=0)
+            self.browser.form['user_session[email]'] = self.email
+            self.browser.form['user_session[password]'] = self.password
 
-        # Check for successful login
-        res = self.browser.open(self.landing_page_url)
-        html = res.read()
+            self.browser.submit()
 
-        if "/logout" in html:
-            return True
+            # Check for successful login
+            res = self.browser.open(self.landing_page_url)
+            html = res.read()
+        except mechanize.HTTPError as http_error:
+            self.print_http_error(http_error)
+        except mechanize.URLError as url_error:
+            self.print_url_error(url_error)
+        finally:
+            if "/logout" in html:
+                return True
 
         return False
 
@@ -242,3 +250,15 @@ class TreehouseDownloader:
                 return True
 
         return False
+
+    def print_http_error(self, error):
+        """
+        Print an error message for http errors
+        """
+        print "Encountered an HTTP error with status code {}".format(error.code)
+
+    def print_url_error(self, error):
+        """
+        Print an error message for URL errors
+        """
+        print "Unable to contact Treehouse's server"
