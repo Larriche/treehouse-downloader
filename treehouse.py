@@ -1,3 +1,4 @@
+import os
 import sys
 import mechanize
 import cookielib
@@ -32,5 +33,10 @@ else:
             skip = True
 
       downloader = TreehouseDownloader(browser, url, folder, email, password, skip_downloaded=skip)
-      downloader.download_videos()
+
+      try:
+            downloader.download_videos()
+      except KeyboardInterrupt:
+            print '\nBye. See you soon :)'
+            sys.exit(0)
 

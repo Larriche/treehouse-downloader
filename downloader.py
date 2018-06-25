@@ -23,7 +23,7 @@ class TreehouseDownloader:
         self.password = password
 
         # Main directory for downloads
-        self.downloads_folder = folder
+        self.downloads_folder = 'downloads/' + folder
 
         # Base treehouse url
         self.base_url = 'https://teamtreehouse.com'
@@ -39,8 +39,17 @@ class TreehouseDownloader:
         Get the urls of the steps that have downloadable videos
         """
         # Visit the page to get course steps
-        res = self.browser.open(self.landing_page_url + "/stages")
-        html = res.read()
+        html = ""
+
+        try:
+            res = self.browser.open(self.landing_page_url + "/stages")
+            html = res.read()
+        except mechanize.HTTPError as http_error:
+            self.print_http_error(http_error)
+            return {}
+        except mechanize.URLError as url_error:
+            self.print_url_error(url_error)
+            return {}
 
         # Holds url of steps that involve a video tutorial
         # URLs are grouped by course stages
@@ -82,9 +91,17 @@ class TreehouseDownloader:
         Extract the HD video url from a single tutorial page
         """
         url = self.base_url + url
+        html = ""
 
-        res = self.browser.open(url)
-        html = res.read()
+        try:
+            res = self.browser.open(url)
+            html = res.read()
+        except mechanize.HTTPError as http_error:
+            self.print_http_error(http_error)
+            return None
+        except mechanize.URLError as url_error:
+            self.print_url_error(url_error)
+            return None
 
         soup = BeautifulSoup(html, "html.parser")
         a = soup.find('a', href=re.compile('.\?hd=yes'))
@@ -104,6 +121,8 @@ class TreehouseDownloader:
             print "Unable to create connection to cache database. Aborting.."
             return
 
+        print "Logging in bot.."
+
         login = self.login()
 
         if not login:
@@ -121,7 +140,7 @@ class TreehouseDownloader:
 
         stage_count = 1
         for stage in step_urls:
-            print 'Current stage: ' + stage
+            print '\nCurrent stage: ' + stage
 
             urls = step_urls[stage]
             stage_folder = os.path.join(self.downloads_folder, stage + " " + str(stage_count))
@@ -135,32 +154,37 @@ class TreehouseDownloader:
             for url in urls:
                 # Get the url for the HD content for this course step
                 video_url = self.get_video_url(url)
+                if video_url:
+                    video_url = self.base_url + video_url
 
-                if not video_url:
-                    continue
-
-                video_url = self.base_url + video_url
-
-                if self.skip_downloaded and self.video_downloaded(video_url):
-                    print "Skipping video " + str(url_count)
+                if not video_url or (self.skip_downloaded and self.video_downloaded(video_url)):
+                    print "\tSkipping video " + str(url_count)
                     url_count += 1
                     continue
 
                 # Download the mp4 file as a binary stream and write it out
-                print "Downloading and saving video " + str(url_count)
+                print "\n\t- Downloading and saving video " + str(url_count)
 
-                res = self.browser.open(video_url)
-                data = res.read()
-                file_path = path + "video_{}.mp4".format(str(url_count))
+                try:
+                    res = self.browser.open(video_url)
+                    data = res.read()
+                    file_path = path + "video_{}.mp4".format(str(url_count))
 
-                with open(file_path, 'wb') as file_handle:
-                    file_handle.write(data)
+                    with open(file_path, 'wb') as file_handle:
+                        file_handle.write(data)
 
-                self.save_url(video_url)
+                    self.save_url(video_url)
+                except mechanize.HTTPError as http_error:
+                    self.print_http_error(http_error)
+                    print "\tDownload failed. Skipping.."
+                except mechanize.URLError as url_error:
+                    self.print_url_error(url_error)
+                    print "\tDownload failed. Skipping.."
+
                 url_count += 1
 
-                print "Catching my breath :)"
-                time.sleep(5)
+                print "\tCatching my breath :)"
+                time.sleep(10)
 
             stage_count += 1
 
