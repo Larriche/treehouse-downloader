@@ -137,47 +137,59 @@ class TreehouseDownloader:
             urls = step_urls[stage]
             stage_folder = os.path.join(self.downloads_folder, stage + " " + str(stage_count))
 
-            # Create sub-directory for a stage
-            if not os.path.exists(stage_folder):
-                os.makedirs(stage_folder)
-
-            url_count = 1
-            for url in urls:
-                # Get the url for the HD content for this course step
-                video_url = self.get_video_url(url)
-                if video_url:
-                    video_url = self.base_url + video_url
-
-                if not video_url or (self.skip_downloaded and self.video_downloaded(video_url)):
-                    print "\tSkipping video " + str(url_count)
-                    url_count += 1
-                    continue
-
-                # Download the mp4 file as a binary stream and write it out
-                print "\n\t- Downloading and saving video " + str(url_count)
-
-                try:
-                    res = self.browser.open(video_url)
-                    data = res.read()
-                    file_path = stage_folder + "/video_{}.mp4".format(str(url_count))
-
-                    with open(file_path, 'wb') as file_handle:
-                        file_handle.write(data)
-
-                    self.save_url(video_url)
-                except mechanize.HTTPError as http_error:
-                    self.print_http_error(http_error)
-                    print "\tDownload failed. Skipping.."
-                except mechanize.URLError as url_error:
-                    self.print_url_error(url_error)
-                    print "\tDownload failed. Skipping.."
-
-                url_count += 1
-
-                print "\tCatching my breath :)"
-                time.sleep(10)
+            self.download_stage_videos(urls, stage_folder)
 
             stage_count += 1
+
+    def download_stage_videos(self, urls, stage_folder):
+        """
+        Download all tutorial videos for a course stage
+        """
+        # Create sub-directory for a stage
+        if not os.path.exists(stage_folder):
+            os.makedirs(stage_folder)
+
+        url_count = 1
+        for url in urls:
+            # Get the url for the HD content for this course step
+            video_url = self.get_video_url(url)
+            if video_url:
+                video_url = self.base_url + video_url
+
+            if not video_url or (self.skip_downloaded and self.video_downloaded(video_url)):
+                print "\tSkipping video " + str(url_count)
+                url_count += 1
+                continue
+
+            # Download the mp4 file as a binary stream and write it out
+            print "\n\t- Downloading and saving video " + str(url_count)
+
+            file_path = stage_folder + "/video_{}.mp4".format(str(url_count))
+            self.download_video(video_url, file_path)
+
+            url_count += 1
+
+            print "\tCatching my breath :)"
+            time.sleep(10)
+
+    def download_video(self, video_url, save_path):
+        """
+        Download and save a stage video
+        """
+        try:
+            res = self.browser.open(video_url)
+            data = res.read()
+
+            with open(file_path, 'wb') as file_handle:
+                file_handle.write(data)
+
+            self.save_url(video_url)
+        except mechanize.HTTPError as http_error:
+            self.print_http_error(http_error)
+            print "\tDownload failed. Skipping.."
+        except mechanize.URLError as url_error:
+            self.print_url_error(url_error)
+            print "\tDownload failed. Skipping.."
 
     def login(self):
         """
