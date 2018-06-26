@@ -115,25 +115,17 @@ class TreehouseDownloader:
         """
         Main method to be called to handle video downloads
         """
-        setup = self.setup()
-
-        if not setup:
-            print "Unable to create connection to cache database. Aborting.."
+        if not self.setup():
+            print "Unable to setup url db and folder.Aborting..."
             return
 
         print "Logging in bot.."
 
-        login = self.login()
-
-        if not login:
+        if not self.login():
             print 'Log in failed. Aborting..'
             return
 
         print 'Log in was successful'
-
-        # Create base folder
-        if not os.path.exists(self.downloads_folder):
-            os.makedirs(self.downloads_folder)
 
         # Course step urls grouped by stage
         step_urls = self.get_step_urls()
@@ -144,7 +136,6 @@ class TreehouseDownloader:
 
             urls = step_urls[stage]
             stage_folder = os.path.join(self.downloads_folder, stage + " " + str(stage_count))
-            path = stage_folder + '/'
 
             # Create sub-directory for a stage
             if not os.path.exists(stage_folder):
@@ -168,7 +159,7 @@ class TreehouseDownloader:
                 try:
                     res = self.browser.open(video_url)
                     data = res.read()
-                    file_path = path + "video_{}.mp4".format(str(url_count))
+                    file_path = stage_folder + "/video_{}.mp4".format(str(url_count))
 
                     with open(file_path, 'wb') as file_handle:
                         file_handle.write(data)
@@ -221,6 +212,20 @@ class TreehouseDownloader:
 
     def setup(self):
         """
+        Create urls database if not there and also create base folder
+        for downloads
+        """
+        if not self.setup_database():
+            return False
+
+        # Create base folder
+        if not os.path.exists(self.downloads_folder):
+            os.makedirs(self.downloads_folder)
+
+        return True
+
+    def setup_database(self):
+        """
         Check whether urls database exists, if not create it
         """
         # Create the database for storing the video urls
@@ -243,6 +248,7 @@ class TreehouseDownloader:
         self.conn = conn
 
         return True
+
 
     def save_url(self, url):
         """
