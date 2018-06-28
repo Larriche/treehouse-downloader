@@ -180,7 +180,7 @@ class TreehouseDownloader:
             res = self.browser.open(video_url)
             data = res.read()
 
-            with open(file_path, 'wb') as file_handle:
+            with open(save_path, 'wb') as file_handle:
                 file_handle.write(data)
 
             self.save_url(video_url)

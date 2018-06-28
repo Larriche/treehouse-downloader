@@ -28,7 +28,10 @@ else:
       url, folder, email, password = inputs[1:5]
 
       if (len(inputs) == 6) and (inputs[5] == 'true' or inputs[5] == 'false'):
-            skip = inputs[5]
+            if inputs[5] == 'true':
+                  skip = True
+            else:
+                  skip = False
       else:
             skip = True
 
