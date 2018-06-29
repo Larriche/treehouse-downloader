@@ -1,1 +1,4 @@
-This is a web scraping project to build an automatic course videos downloader that downloads videos from Treehouse. This will spare me the time taken to manually go through video pages and download the videos.
+This program is a bot that downloads Treehouse course videos when given the URL of the
+course landing page and the user's login credentials
+
+Run 'python treehouse.py --help' to view the expected arguments
