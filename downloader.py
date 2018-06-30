@@ -3,6 +3,8 @@ import re
 import time
 import sqlite3
 import mechanize
+import requests
+from clint.textui import progress
 from bs4 import BeautifulSoup
 
 class TreehouseDownloader:
@@ -157,19 +159,19 @@ class TreehouseDownloader:
                 video_url = self.base_url + video_url
 
             if not video_url or (self.skip_downloaded and self.video_downloaded(video_url)):
-                print "\tSkipping video " + str(url_count)
+                print "  Skipping video " + str(url_count)
                 url_count += 1
                 continue
 
             # Download the mp4 file as a binary stream and write it out
-            print "\n\t- Downloading and saving video " + str(url_count)
+            print "\n  - Downloading and saving video " + str(url_count)
 
             file_path = stage_folder + "/video_{}.mp4".format(str(url_count))
             self.download_video(video_url, file_path)
 
             url_count += 1
 
-            print "\tCatching my breath :)"
+            print "  Catching my breath :)"
             time.sleep(10)
 
     def download_video(self, video_url, save_path):
@@ -178,10 +180,22 @@ class TreehouseDownloader:
         """
         try:
             res = self.browser.open(video_url)
-            data = res.read()
+            # The redirect url is the real downloadable video resource link
+            real_video_url = res.geturl()
 
-            with open(save_path, 'wb') as file_handle:
-                file_handle.write(data)
+            res = requests.get(real_video_url, stream=True)
+
+            print "  "
+
+            with open(save_path, 'wb') as f:
+                total_length = int(res.headers.get('content-length'))
+
+                for chunk in progress.mill(res.iter_content(chunk_size = 1024), expected_size = (total_length/1024) + 1):
+                    if chunk:
+                        f.write(chunk)
+                        f.flush()
+
+            print '  Download completed'
 
             self.save_url(video_url)
         except mechanize.HTTPError as http_error:
