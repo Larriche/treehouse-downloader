@@ -1,10 +1,10 @@
 import os
 import re
 import time
+from tqdm import tqdm
 import sqlite3
-import mechanize
 import requests
-from clint.textui import progress
+import mechanize
 from bs4 import BeautifulSoup
 
 class TreehouseDownloader:
@@ -187,13 +187,13 @@ class TreehouseDownloader:
 
             print "  "
 
-            with open(save_path, 'wb') as f:
-                total_length = int(res.headers.get('content-length'))
+            # Total size in bytes.
+            total_size = int(res.headers.get('content-length', 0));
+            block_size = 1024
 
-                for chunk in progress.mill(res.iter_content(chunk_size = 1024), expected_size = (total_length/1024) + 1):
-                    if chunk:
-                        f.write(chunk)
-                        f.flush()
+            with open(save_path, 'wb') as f:
+                for data in tqdm(res.iter_content(block_size), total=(total_size//block_size) + 1, unit='KB', unit_scale=True):
+                    f.write(data)
 
             print '  Download completed'
 
