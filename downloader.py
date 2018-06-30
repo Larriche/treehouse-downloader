@@ -55,15 +55,20 @@ class TreehouseDownloader:
 
         # Holds url of steps that involve a video tutorial
         # URLs are grouped by course stages
-        video_page_urls = {}
+        video_page_urls = []
 
         soup = BeautifulSoup(html, "html.parser")
 
         # Divs housing each stage content
         stage_divs = soup.findAll('div', {'class': 'featurette'})
+        stage_count = 1
 
         for div in stage_divs:
-            stage_title = str(div.find('h2').getText()).strip()
+            stage_title = str(stage_count) + " - " + str(div.find('h2').getText()).strip()
+            stage_info = {
+                            'stage': stage_title,
+                            'urls': []
+                         }
 
             # Links and headings for tutorials in a stage are stored as lists
             for li in div.findAll('li'):
@@ -83,8 +88,11 @@ class TreehouseDownloader:
 
                 # We are adding only URLs whose corresponding info look like durations
                 if re.match(r'^(\d+)\:(\d+)$', time_text):
-                    video_page_urls.setdefault(stage_title, [])
-                    video_page_urls[stage_title].append(url)
+                    stage_info['stage'] = stage_title
+                    stage_info['urls'].append(url)
+
+            video_page_urls.append(stage_info)
+            stage_count += 1
 
         return video_page_urls
 
@@ -132,16 +140,15 @@ class TreehouseDownloader:
         # Course step urls grouped by stage
         step_urls = self.get_step_urls()
 
-        stage_count = 1
-        for stage in step_urls:
+        for stage_info in step_urls:
+            stage = stage_info['stage']
+            urls = stage_info['urls']
+
             print '\nCurrent stage: ' + stage
 
-            urls = step_urls[stage]
-            stage_folder = os.path.join(self.downloads_folder, str(stage_count) + " - " + stage)
+            stage_folder = os.path.join(self.downloads_folder, stage)
 
             self.download_stage_videos(urls, stage_folder)
-
-            stage_count += 1
 
     def download_stage_videos(self, urls, stage_folder):
         """
