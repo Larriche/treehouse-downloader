@@ -135,7 +135,7 @@ class TreehouseDownloader:
             print '\nCurrent stage: ' + stage
 
             urls = step_urls[stage]
-            stage_folder = os.path.join(self.downloads_folder, stage + " " + str(stage_count))
+            stage_folder = os.path.join(self.downloads_folder, str(stage_count) + " - " + stage)
 
             self.download_stage_videos(urls, stage_folder)
 
